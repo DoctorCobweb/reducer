@@ -60,7 +60,7 @@ def getDrePubKey(conn):
 def reduceFileCols(rollFileNames):
     reducedFileNames = []
 
-    for roll in rollfileNames:
+    for roll in rollFileNames:
         count = 0
         reduced_roll = []
         
