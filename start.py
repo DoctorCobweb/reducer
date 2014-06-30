@@ -66,8 +66,8 @@ def reduceFileCols(rollFileNames):
         
         print 'matching target vals to roll file: %s' % roll 
         # Load dataset
-        roll = pd.read_csv(roll)
-        roll_iterator = roll.iterrows()
+        roll_csv = pd.read_csv(roll)
+        roll_iterator = roll_csv.iterrows()
     
         for j, row in roll_iterator:
             count = count + 1
@@ -98,7 +98,7 @@ def reduceFileCols(rollFileNames):
         reduced_roll_np = np.array(reduced_roll)
         reduced_roll_df = pd.DataFrame(reduced_roll_np)
         reduced_roll_df.to_csv(save_location, header=REDUCED_ROLL_HEADER, index=False)
-        print 'SUCCESS: saved %s to disk', roll 
+        #print 'SUCCESS: saved %s to disk', roll 
 
     return reducedFileNames
 
@@ -152,7 +152,3 @@ if __name__ == '__main__':
     encryptTarBall(DRE_UID)
     #encryptTarBall(RHI_UID)
     seeYaLaterTarball(conn)
-
-
-
-
