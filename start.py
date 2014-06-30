@@ -60,45 +60,45 @@ def getDrePubKey(conn):
 def reduceFileCols(rollFileNames):
     reducedFileNames = []
 
-    for roll in rollFileNames:
-        count = 0
+    for rollFile in rollFileNames:
+        print 'matching target vals to roll file: %s' % rollFile
+
         reduced_roll = []
-        
-        print 'matching target vals to roll file: %s' % roll 
-        # Load dataset
-        roll_csv = pd.read_csv(roll)
+        roll_csv = pd.read_csv(rollFile)
         roll_iterator = roll_csv.iterrows()
-    
+
         for j, row in roll_iterator:
-            count = count + 1
+            row_dict = {}
                 
-            reduced_roll.append(row['VEC ID'])
-            reduced_roll.append(row['MB_CODE11'])
-            reduced_roll.append(row['MB_CAT11'])
-            reduced_roll.append(row['SA1_MAIN11'])
-            reduced_roll.append(row['SA2_MAIN11'])
-            reduced_roll.append(row['SA2_NAME11'])
-            reduced_roll.append(row['SA3_CODE11'])
-            reduced_roll.append(row['SA3_NAME11'])
-            reduced_roll.append(row['SA4_CODE11'])
-            reduced_roll.append(row['SA4_NAME11'])
-            reduced_roll.append(row['STE_CODE11'])
-            reduced_roll.append(row['STE_NAME11'])
-            reduced_roll.append(row['GCC_CODE11'])
-            reduced_roll.append(row['GCC_NAME11'])
-            reduced_roll.append(row['VIC_LH_DISTRICT'])
-            reduced_roll.append(row['VIC_UH_REGION'])
-            reduced_roll.append(row['FED_ELECT'])
-            reduced_roll.append(row['TARGET'])
-            reduced_roll.append(row['CAMP_TARGET'])
+            row_dic['VEC ID']          = row['VEC ID']
+            row_dic['MB_CODE11']       = row['MB_CODE11']
+            row_dic['MB_CAT11']        = row['MB_CAT11']
+            row_dic['SA1_MAIN11']      = row['SA1_MAIN11']
+            row_dic['SA2_MAIN11']      = row['SA2_MAIN11']
+            row_dic['SA2_NAME11']      = row['SA2_NAME11']
+            row_dic['SA3_CODE11']      = row['SA3_CODE11']
+            row_dic['SA3_NAME11']      = row['SA3_NAME11']
+            row_dic['SA4_CODE11']      = row['SA4_CODE11']
+            row_dic['SA4_NAME11']      = row['SA4_NAME11']
+            row_dic['STE_CODE11']      = row['STE_CODE11']
+            row_dic['STE_NAME11']      = row['STE_NAME11']
+            row_dic['GCC_CODE11']      = row['GCC_CODE11']
+            row_dic['GCC_NAME11']      = row['GCC_NAME11']
+            row_dic['VIC_LH_DISTRICT'] = row['VIC_LH_DISTRICT']
+            row_dic['VIC_UH_REGION']   = row['VIC_UH_REGION']
+            row_dic['FED_ELECT']       = row['FED_ELECT']
+            row_dic['TARGET']          = row['TARGET']
+            row_dic['CAMP_TARGET']     = row['CAMP_TARGET']
+
+            reduced_roll.append(row_dict) 
             
         print 'saving this reduced roll to disk...'
-        save_location = "%s_reduced.csv" % (roll[:len(roll)-4])
-        reducedFileNames.append(save_location)
-        reduced_roll_np = np.array(reduced_roll)
-        reduced_roll_df = pd.DataFrame(reduced_roll_np)
+        save_location = "%s_reduced.csv" % (rollFile[:len(rollFile)-4])
+        reduced_roll_df = pd.DataFrame(reduced_roll)
         reduced_roll_df.to_csv(save_location, header=REDUCED_ROLL_HEADER, index=False)
-        #print 'SUCCESS: saved %s to disk', roll 
+        print 'SUCCESS: saved %s to disk', save_location 
+
+        reducedFileNames.append(save_location)
 
     return reducedFileNames
 
