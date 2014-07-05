@@ -17,7 +17,11 @@ DRE_PUB_KEY_NAME = '0x93FEF9BB.asc'
 DRE_UID          = 'andre trosky <andretrosky@gmail.com>'
 TARBALL_FILENAME = 'VEC-spatial-join-and-targets-reduced.tar.gz'
 ENCRYPTED_VEC    = 'VEC-spatial-join-and-targets-reduced.gpg'
-REDUCED_ROLL_HEADER = ["VEC ID", "MB_CODE11", "MB_CAT11", "SA1_MAIN11", "SA2_MAIN11", "SA2_NAME11", "SA3_CODE11", "SA3_NAME11", "SA4_CODE11","SA4_NAME11", "STE_CODE11", "STE_NAME11", "GCC_CODE11", "GCC_NAME11", "VIC_LH_DISTRICT", "VIC_UH_REGION", "FED_ELECT", "TARGET", "CAMP_TARGET"]
+REDUCED_ROLL_HEADER = ["VEC ID", "MB_CODE11", "MB_CAT11", "SA1_MAIN11", "SA2_MAIN11", 
+                       "SA2_NAME11", "SA3_CODE11", "SA3_NAME11", "SA4_CODE11",
+                       "SA4_NAME11", "STE_CODE11", "STE_NAME11", "GCC_CODE11", 
+                       "GCC_NAME11", "VIC_LH_DISTRICT", "VIC_UH_REGION", "FED_ELECT", 
+                       "TARGET", "CAMP_TARGET"]
 
 
 def getRollFiles(conn):
@@ -33,6 +37,8 @@ def getRollFiles(conn):
             #strip out results1/ prefix for filename to save to
             daBucket.get_key(yar.name).get_contents_to_filename(yar.name[9:])
             rollFileNames.append(yar.name[9:])
+   
+    assert len(rollFileNames) > 0, 'ASSERT ERROR: rollFileNames is empty'
 
     return rollFileNames
   
@@ -42,6 +48,9 @@ def getRhiPubKey(conn):
     # bootstrap used to download
     daBucket = conn.get_bucket(AWS_BUCKET_KEY)
     daBucket.get_key(RHI_PUB_KEY_NAME).get_contents_to_filename(RHI_PUB_KEY_NAME)
+
+    assert os.path.exists(RHI_PUB_KEY_NAME) == True, 'ASSERT ERROR: rhi pub key no exists'
+
     cmd = ["gpg", "--import", RHI_PUB_KEY_NAME]
     call(cmd)
 
@@ -52,6 +61,9 @@ def getDrePubKey(conn):
     # bootstrap used to download
     daBucket = conn.get_bucket(AWS_BUCKET_KEY)
     daBucket.get_key(DRE_PUB_KEY_NAME).get_contents_to_filename(DRE_PUB_KEY_NAME)
+
+    assert os.path.exists(DRE_PUB_KEY_NAME) == True, 'ASSERT ERROR: dre pub key no exists'
+
     cmd = ["gpg", "--import", DRE_PUB_KEY_NAME]
     call(cmd)
 
@@ -65,7 +77,10 @@ def reduceFileCols(rollFileNames):
 
         reduced_roll = []
         roll_csv = pd.read_csv(rollFile)
+        assert roll_csv is not None, 'ASSERT ERROR:roll_csv df is None'
+
         roll_iterator = roll_csv.iterrows()
+        assert roll_iterator is not None, 'ASSERT ERROR:roll_iterator is None'
 
         for j, row in roll_iterator:
             row_dict = {}
@@ -94,6 +109,7 @@ def reduceFileCols(rollFileNames):
             
         print 'saving this reduced roll to disk...'
         save_location = "%s_reduced.csv" % (rollFile[:len(rollFile)-4])
+        assert save_location is not None, 'ASSERT ERROR: save_location is len 0'
         reduced_roll_df = pd.DataFrame(reduced_roll)
         reduced_roll_df.to_csv(save_location, header=REDUCED_ROLL_HEADER, index=False)
         print 'SUCCESS: saved %s to disk', save_location 
@@ -104,22 +120,29 @@ def reduceFileCols(rollFileNames):
 
 
 
-def bundleFiles(rollFileNames):
+def bundleFiles(reducedFileNames):
     print 'in bundleFiles'
 
     cmd = ["tar", "czf", TARBALL_FILENAME]
-    for f in rollFileNames:
+    for f in reducedFileNames:
         cmd.append(f)
     
-    call(cmd)
-
+    try:
+        call(cmd)
+    except:
+        print 'SUBPROCESS ERROR:bundleFile problem with tarballing files'
+        exit(1)
 
 
 def encryptTarBall(UID):
     print 'encrypting VEC tarball...'
     cmd = ["gpg", "-o", ENCRYPTED_VEC, "--encrypt", "-r", UID , TARBALL_FILENAME]
 
-    call(cmd)
+    try:
+        call(cmd)
+    except:
+        print 'SUBPROCESS ERROR:encryptTarBall problem with encrypting tarball'
+        exit(1)
 
 
 
@@ -128,11 +151,12 @@ def seeYaLaterTarball(conn):
     daBucket = conn.get_bucket(AWS_BUCKET_KEY)
     k = boto.s3.key.Key(daBucket, ENCRYPTED_VEC)
     k.key = ENCRYPTED_VEC
+    assert k.key is not None, 'ASSERT ERROR: k.key is None'
 
     try:
         k.set_contents_from_filename(ENCRYPTED_VEC)
         print 'SUCCESS: uploaded %s to S3' % ENCRYPTED_VEC 
-    except Exception:
+    except:
         print 'ERROR: could no upload %s to S3' % ENCRYPTED_VEC
 
 
@@ -145,6 +169,8 @@ if __name__ == '__main__':
     print '...connected to S3'
 
     rollFileNames = getRollFiles(conn)
+
+
     getRhiPubKey(conn)
     getDrePubKey(conn)
     reducedFileNames = reduceFileCols(rollFileNames)
