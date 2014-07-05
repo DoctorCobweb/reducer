@@ -52,7 +52,12 @@ def getRhiPubKey(conn):
     assert os.path.exists(RHI_PUB_KEY_NAME) == True, 'ASSERT ERROR: rhi pub key no exists'
 
     cmd = ["gpg", "--import", RHI_PUB_KEY_NAME]
-    call(cmd)
+
+    try:
+        call(cmd)
+    except:
+        print 'ERROR: subprocess error in getRhiPubKey'
+        exit(1)
 
 
 
@@ -65,7 +70,12 @@ def getDrePubKey(conn):
     assert os.path.exists(DRE_PUB_KEY_NAME) == True, 'ASSERT ERROR: dre pub key no exists'
 
     cmd = ["gpg", "--import", DRE_PUB_KEY_NAME]
-    call(cmd)
+
+    try:
+        call(cmd)
+    except:
+        print 'ERROR: subprocess error in getDrePubKey'
+        exit(1)
 
 
 
