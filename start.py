@@ -1,3 +1,8 @@
+#reducer is much like bundler except that it reduces the number of attributes down
+#to that defined in REDUCED_ROLL_HEADER. the reduced files are saved the the 
+#hdd then bundled, then encrypted then sent to aws S3
+
+
 import boto
 import sys
 import os
@@ -32,11 +37,11 @@ def getRollFiles(conn):
     rollFileNames = []
 
     for yar in daBucket.list():
-        if yar.name.startswith('results1/') and yar.name.endswith('.csv'):
+        if yar.name.startswith('results_full/') and yar.name.endswith('.csv'):
             pprint.pprint(yar.name)
-            #strip out results1/ prefix for filename to save to
-            daBucket.get_key(yar.name).get_contents_to_filename(yar.name[9:])
-            rollFileNames.append(yar.name[9:])
+            #strip out results_full/ prefix for filename to save to
+            daBucket.get_key(yar.name).get_contents_to_filename(yar.name[13:])
+            rollFileNames.append(yar.name[13:])
    
     assert len(rollFileNames) > 0, 'ASSERT ERROR: rollFileNames is empty'
 
@@ -82,6 +87,7 @@ def getDrePubKey(conn):
 def reduceFileCols(rollFileNames):
     reducedFileNames = []
 
+    #loop through the spatially joined files and do reducing for each one
     for rollFile in rollFileNames:
         print 'matching target vals to roll file: %s' % rollFile
 
