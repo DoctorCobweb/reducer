@@ -11,17 +11,19 @@ from subprocess import call
 import pandas as pd
 import os
 import numpy as np
+from sets import Set
 
 
 
 
-AWS_BUCKET_KEY   = 'au.com.andretrosky.roll'
-RHI_PUB_KEY_NAME = '73487FA275BBE4142E3DCFD53C95E1C17B86447D.asc'
-RHI_UID          = 'Rhiannon Butcher <rhiannon@protodata.com.au>'
-DRE_PUB_KEY_NAME = '0x93FEF9BB.asc'
-DRE_UID          = 'andre trosky <andretrosky@gmail.com>'
-TARBALL_FILENAME = 'VEC-spatial-join-and-targets-reduced.tar.gz'
-ENCRYPTED_VEC    = 'VEC-spatial-join-and-targets-reduced.gpg'
+AWS_BUCKET_KEY      = 'au.com.andretrosky.roll'
+RHI_PUB_KEY_NAME    = '73487FA275BBE4142E3DCFD53C95E1C17B86447D.asc'
+RHI_UID             = 'Rhiannon Butcher <rhiannon@protodata.com.au>'
+DRE_PUB_KEY_NAME    = '0x93FEF9BB.asc'
+DRE_UID             = 'andre trosky <andretrosky@gmail.com>'
+TARBALL_FILENAME    = 'VEC-spatial-join-and-targets-reduced.tar.gz'
+MESH_BLOCK_TARGETS  = 'targeted-nb-import-ONE-COLUMN.csv'
+ENCRYPTED_VEC       = 'VEC-spatial-join-and-targets-reduced.gpg'
 REDUCED_ROLL_HEADER = ["VEC ID", "MB_CODE11", "MB_CAT11", "SA1_MAIN11", "SA2_MAIN11", 
                        "SA2_NAME11", "SA3_CODE11", "SA3_NAME11", "SA4_CODE11",
                        "SA4_NAME11", "STE_CODE11", "STE_NAME11", "GCC_CODE11", 
@@ -29,7 +31,7 @@ REDUCED_ROLL_HEADER = ["VEC ID", "MB_CODE11", "MB_CAT11", "SA1_MAIN11", "SA2_MAI
                        "TARGET", "CAMP_TARGET"]
 
 
-def getRollFiles(conn):
+def getRollFilesAndMeshTargets(conn):
     print 'in getAwsKeys'
     daBucket = conn.get_bucket(AWS_BUCKET_KEY)
     print 'keys in %s bucket:' % AWS_BUCKET_KEY
@@ -44,6 +46,13 @@ def getRollFiles(conn):
             rollFileNames.append(yar.name[13:])
    
     assert len(rollFileNames) > 0, 'ASSERT ERROR: rollFileNames is empty'
+
+    #now get the mesh block targeting csv
+    keySet = Set(daBucket.list())
+    meshSet = Set([MESH_BLOCK_TARGETS])
+    assert len(keySet.intersection(meshSet)) != 0, 'ASSERTION ERROR: no mesh target file'
+    daBucket.get_key(MESH_BLOCK_TARGETS).get_contents_to_filename(MESH_BLOCK_TARGETS)
+      
 
     return rollFileNames
   
@@ -91,6 +100,7 @@ def reduceFileCols(rollFileNames):
     for rollFile in rollFileNames:
         print 'matching target vals to roll file: %s' % rollFile
 
+        #list of dicts holding the reduced attributes
         reduced_roll = []
         roll_csv = pd.read_csv(rollFile)
         assert roll_csv is not None, 'ASSERT ERROR:roll_csv df is None'
@@ -126,6 +136,8 @@ def reduceFileCols(rollFileNames):
         print 'saving this reduced roll to disk...'
         save_location = "%s_reduced.csv" % (rollFile[:len(rollFile)-4])
         assert save_location is not None, 'ASSERT ERROR: save_location is len 0'
+
+        #make a dataframe using the list of dicts, reducted_roll
         reduced_roll_df = pd.DataFrame(reduced_roll)
         reduced_roll_df.to_csv(save_location, header=REDUCED_ROLL_HEADER, index=False)
         print 'SUCCESS: saved %s to disk', save_location 
@@ -138,6 +150,11 @@ def reduceFileCols(rollFileNames):
 
 def bundleFiles(reducedFileNames):
     print 'in bundleFiles'
+
+    #TODO: put the targeted mb listing in tarball also
+    MESH_BLOCK_TARETS= 'targeted-nb-import-ONE-COLUMN.csv'
+
+    
 
     cmd = ["tar", "czf", TARBALL_FILENAME]
     for f in reducedFileNames:
@@ -184,7 +201,7 @@ if __name__ == '__main__':
     conn = boto.connect_s3()
     print '...connected to S3'
 
-    rollFileNames = getRollFiles(conn)
+    rollFileNames = getRollFilesAndMeshTargets(conn)
 
 
     getRhiPubKey(conn)
