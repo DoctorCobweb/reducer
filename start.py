@@ -151,15 +151,13 @@ def reduceFileCols(rollFileNames):
 def bundleFiles(reducedFileNames):
     print 'in bundleFiles'
 
-    #TODO: put the targeted mb listing in tarball also
-    MESH_BLOCK_TARETS= 'targeted-nb-import-ONE-COLUMN.csv'
-
-    
-
     cmd = ["tar", "czf", TARBALL_FILENAME]
     for f in reducedFileNames:
         cmd.append(f)
     
+    #also add in the mesh block targeted nb import file.
+    cmd.append(MESH_BLOCK_TARGETS)
+
     try:
         call(cmd)
     except:
