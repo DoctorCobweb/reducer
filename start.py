@@ -50,7 +50,7 @@ def getRollFilesAndMeshTargets(conn):
     #now get the mesh block targeting csv
     keySet = Set(daBucket.list())
     meshSet = Set([MESH_BLOCK_TARGETS])
-    assert len(keySet.intersection(meshSet)) != 0, 'ASSERTION ERROR: no mesh target file'
+    assert len(keySet.intersection(meshSet)) != 0, 'ASSERTIONERR: no targeted import file'
     daBucket.get_key(MESH_BLOCK_TARGETS).get_contents_to_filename(MESH_BLOCK_TARGETS)
       
 
