@@ -50,7 +50,7 @@ def getRollFilesAndMeshTargets(conn):
     #now get the mesh block targeting csv
     keySet = Set(daBucket.list())
     meshSet = Set([MESH_BLOCK_TARGETS])
-    assert len(keySet.intersection(meshSet)) != 0, 'ASSERTIONERR: no targeted import file'
+    #assert len(keySet.intersection(meshSet)) != 0, 'ASSERTIONERR: no targeted import file'
     daBucket.get_key(MESH_BLOCK_TARGETS).get_contents_to_filename(MESH_BLOCK_TARGETS)
       
 
@@ -139,7 +139,8 @@ def reduceFileCols(rollFileNames):
 
         #make a dataframe using the list of dicts, reducted_roll
         reduced_roll_df = pd.DataFrame(reduced_roll)
-        reduced_roll_df.to_csv(save_location, header=REDUCED_ROLL_HEADER, index=False)
+        #reduced_roll_df.to_csv(save_location, header=REDUCED_ROLL_HEADER, index=False)
+        reduced_roll_df.to_csv(save_location, index=False)
         print 'SUCCESS: saved %s to disk', save_location 
 
         reducedFileNames.append(save_location)
